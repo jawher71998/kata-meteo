@@ -27,13 +27,15 @@ kata-meteo/
 
 ## Installation
 
-À compléter au fil du projet.
+1. Cloner le dépôt.
+2. Copier `.env.example` en `.env` et renseigner les valeurs.
+3. Mettre en place la base de données : voir `docs/database.md`.
 
 ## Avancement
 
 - [x] Phase 0 : préparation
 - [x] Phase 1 : découverte de l'API Open-Meteo
-- [ ] Phase 2 : base de données
+- [x] Phase 2 : base de données
 - [ ] Phase 3 : backend REST
 - [ ] Phase 4 : frontend
 - [ ] Phase 5 : tests et qualité
