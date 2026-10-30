@@ -32,7 +32,7 @@ kata-meteo/
 ## Avancement
 
 - [x] Phase 0 : préparation
-- [ ] Phase 1 : découverte de l'API Open-Meteo
+- [x] Phase 1 : découverte de l'API Open-Meteo
 - [ ] Phase 2 : base de données
 - [ ] Phase 3 : backend REST
 - [ ] Phase 4 : frontend
@@ -41,6 +41,6 @@ kata-meteo/
 
 ## Conventions
 
-- Branches : `type/description-courte` (ex. `feat/cities-endpoint`)
+- Branches : `type/description-courte` (ex. `feature/cities-endpoint`)
 - Commits : Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`, `test:`)
 - Aucun commit direct sur `main` : tout passe par une Pull Request
