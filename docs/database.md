@@ -39,6 +39,10 @@ psql -U kata_meteo_user -d kata_meteo -h localhost -f database/migrations/002_cr
 psql -U kata_meteo_user -d kata_meteo -h localhost -f database/seeds/001_countries_and_cities.sql
 ```
 
+Le seed contient 20 pays et 80 villes (4 par pays). Sous Windows, exécuter d'abord `$env:PGCLIENTENCODING = "UTF8"` pour que les accents soient bien enregistrés.git add database docs
+git commit -m "feat: seed 20 countries and 80 cities"
+git push -u origin feature/seed-20-countries
+
 ## Règles
 
 - Une migration déjà appliquée ne se modifie jamais : on ajoute un nouveau fichier numéroté.
