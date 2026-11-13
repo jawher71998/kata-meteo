@@ -12,3 +12,11 @@ export async function findAllCountries(): Promise<Country[]> {
   );
   return result.rows;
 }
+
+export async function findCountryById(id: number): Promise<Country | null> {
+  const result = await pool.query<Country>(
+    "SELECT id, name, code FROM countries WHERE id = $1",
+    [id]
+  );
+  return result.rows[0] ?? null;
+}

@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { countryRoutes } from "./routes/countryRoutes";
+import { cityRoutes } from "./routes/cityRoutes";
 
 export const app = express();
 
@@ -12,3 +13,4 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/countries", countryRoutes);
+app.use("/api/cities", cityRoutes);
