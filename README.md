@@ -28,15 +28,31 @@ kata-meteo/
 ## Installation
 
 1. Cloner le dépôt.
-2. Copier `.env.example` en `.env` et renseigner les valeurs.
+2. Copier `.env.example` en `.env` et renseigner `DB_PASSWORD`.
 3. Mettre en place la base de données : voir `docs/database.md`.
+4. Lancer le backend :
+
+```
+cd backend
+npm install
+npm run dev
+```
+
+L'API répond sur `http://localhost:3000` (test : `/api/health`).
+
+## Documentation
+
+- `docs/API.md` : référence de l'API (routes, paramètres, erreurs)
+- `docs/database.md` : base de données
+- `docs/open-meteo-findings.md` : résultats de l'exploration d'Open-Meteo
+- `docs/kata-meteo-api.postman_collection.json` : requêtes de test Postman
 
 ## Avancement
 
 - [x] Phase 0 : préparation
 - [x] Phase 1 : découverte de l'API Open-Meteo
 - [x] Phase 2 : base de données
-- [ ] Phase 3 : backend REST
+- [x] Phase 3 : backend REST
 - [ ] Phase 4 : frontend
 - [ ] Phase 5 : tests et qualité
 - [ ] Phase 6 : livraison
