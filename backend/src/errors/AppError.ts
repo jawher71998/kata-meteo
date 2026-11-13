@@ -21,3 +21,10 @@ export class NotFoundError extends AppError {
     this.name = "NotFoundError";
   }
 }
+
+export class ExternalServiceError extends AppError {
+  constructor(message: string, statusCode: 502 | 503 = 502) {
+    super(statusCode, message);
+    this.name = "ExternalServiceError";
+  }
+}
