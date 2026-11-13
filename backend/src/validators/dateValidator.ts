@@ -39,3 +39,11 @@ export function parseHistoricalDate(value: string): string {
   }
   return date;
 }
+
+export const MAX_FORECAST_DAYS = 15;
+
+export function addDaysUtc(date: string, days: number): string {
+  const result = new Date(`${date}T00:00:00Z`);
+  result.setUTCDate(result.getUTCDate() + days);
+  return result.toISOString().slice(0, 10);
+}
