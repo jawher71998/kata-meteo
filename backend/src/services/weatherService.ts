@@ -71,3 +71,74 @@ export async function getCurrentWeather(cityId: number) {
     },
   };
 }
+
+interface OpenMeteoDailyResponse {
+  daily?: {
+    time?: string[];
+    temperature_2m_max?: (number | null)[];
+    temperature_2m_min?: (number | null)[];
+    precipitation_sum?: (number | null)[];
+    cloud_cover_mean?: (number | null)[];
+    wind_speed_10m_max?: (number | null)[];
+    weather_code?: (number | null)[];
+    sunrise?: (string | null)[];
+    sunset?: (string | null)[];
+  };
+  daily_units?: {
+    temperature_2m_max: string;
+    precipitation_sum: string;
+    cloud_cover_mean: string;
+    wind_speed_10m_max: string;
+  };
+}
+
+export async function getHistoricalWeather(cityId: number, date: string) {
+  const city = await getCityById(cityId);
+
+  const data = await fetchFromOpenMeteo<OpenMeteoDailyResponse>(env.openMeteo.archiveUrl, {
+    latitude: city.latitude,
+    longitude: city.longitude,
+    timezone: "auto",
+    start_date: date,
+    end_date: date,
+    daily:
+      "temperature_2m_max,temperature_2m_min,precipitation_sum,cloud_cover_mean," +
+      "wind_speed_10m_max,sunrise,sunset,weather_code",
+  });
+
+  const daily = data.daily;
+  const units = data.daily_units;
+  if (!daily || !units) {
+    throw new ExternalServiceError("Réponse inattendue du service météo.", 502);
+  }
+
+  const values = {
+    temperatureMax: daily.temperature_2m_max?.[0] ?? null,
+    temperatureMin: daily.temperature_2m_min?.[0] ?? null,
+    precipitation: daily.precipitation_sum?.[0] ?? null,
+    cloudCover: daily.cloud_cover_mean?.[0] ?? null,
+    windSpeed: daily.wind_speed_10m_max?.[0] ?? null,
+  };
+  const weatherCode = daily.weather_code?.[0] ?? null;
+  const available = Object.values(values).some((value) => value !== null);
+
+  return {
+    city: { id: city.id, name: city.name, country: city.country.name },
+    date,
+    available,
+    message: available ? null : "Aucune donnée météo disponible pour cette date.",
+    daily: {
+      ...values,
+      weatherCode,
+      condition: weatherCode === null ? null : describeWeatherCode(weatherCode),
+      sunrise: toHourMinute(daily.sunrise?.[0]),
+      sunset: toHourMinute(daily.sunset?.[0]),
+    },
+    units: {
+      temperature: units.temperature_2m_max,
+      precipitation: units.precipitation_sum,
+      cloudCover: units.cloud_cover_mean,
+      windSpeed: units.wind_speed_10m_max,
+    },
+  };
+}
