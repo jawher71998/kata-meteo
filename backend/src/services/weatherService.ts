@@ -3,6 +3,7 @@ import { ExternalServiceError } from "../errors/AppError";
 import { getCityById } from "./cityService";
 import { fetchFromOpenMeteo } from "./openMeteoClient";
 import { describeWeatherCode } from "./weatherCodes";
+import { CityDetails } from "../repositories/cityRepository";
 
 interface OpenMeteoCurrentResponse {
   current?: {
@@ -141,4 +142,117 @@ export async function getHistoricalWeather(cityId: number, date: string) {
       windSpeed: units.wind_speed_10m_max,
     },
   };
+}
+
+interface OpenMeteoForecastResponse {
+  daily?: {
+    time?: string[];
+    temperature_2m_max?: (number | null)[];
+    temperature_2m_min?: (number | null)[];
+    precipitation_sum?: (number | null)[];
+    precipitation_probability_max?: (number | null)[];
+    cloud_cover_mean?: (number | null)[];
+    wind_speed_10m_max?: (number | null)[];
+    weather_code?: (number | null)[];
+    sunrise?: (string | null)[];
+    sunset?: (string | null)[];
+  };
+  daily_units?: {
+    temperature_2m_max: string;
+    precipitation_sum: string;
+    precipitation_probability_max: string;
+    cloud_cover_mean: string;
+    wind_speed_10m_max: string;
+  };
+}
+
+type ForecastDaily = NonNullable<OpenMeteoForecastResponse["daily"]>;
+
+const FORECAST_DAILY_VARIABLES =
+  "temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max," +
+  "cloud_cover_mean,wind_speed_10m_max,sunrise,sunset,weather_code";
+
+function buildForecastDay(daily: ForecastDaily, index: number, date: string) {
+  // index vaut -1 si la date n'est pas dans la réponse : toutes les valeurs restent null
+  const at = <T>(values: (T | null)[] | undefined): T | null =>
+    index >= 0 ? (values?.[index] ?? null) : null;
+
+  const values = {
+    temperatureMax: at(daily.temperature_2m_max),
+    temperatureMin: at(daily.temperature_2m_min),
+    precipitation: at(daily.precipitation_sum),
+    precipitationProbability: at(daily.precipitation_probability_max),
+    cloudCover: at(daily.cloud_cover_mean),
+    windSpeed: at(daily.wind_speed_10m_max),
+  };
+  const weatherCode = at(daily.weather_code);
+
+  return {
+    date,
+    available: Object.values(values).some((value) => value !== null),
+    ...values,
+    weatherCode,
+    condition: weatherCode === null ? null : describeWeatherCode(weatherCode),
+    sunrise: toHourMinute(at(daily.sunrise)),
+    sunset: toHourMinute(at(daily.sunset)),
+  };
+}
+
+function formatForecast(
+  city: CityDetails,
+  mode: "days" | "dates",
+  data: OpenMeteoForecastResponse,
+  requestedDates?: string[]
+) {
+  const daily = data.daily;
+  const units = data.daily_units;
+  const time = daily?.time;
+  if (!daily || !units || !time) {
+    throw new ExternalServiceError("Réponse inattendue du service météo.", 502);
+  }
+
+  const dates = requestedDates ?? time;
+
+  return {
+    city: { id: city.id, name: city.name, country: city.country.name },
+    mode,
+    days: dates.map((date) => buildForecastDay(daily, time.indexOf(date), date)),
+    units: {
+      temperature: units.temperature_2m_max,
+      precipitation: units.precipitation_sum,
+      precipitationProbability: units.precipitation_probability_max,
+      cloudCover: units.cloud_cover_mean,
+      windSpeed: units.wind_speed_10m_max,
+    },
+  };
+}
+
+export async function getForecastByDays(cityId: number, days: number) {
+  const city = await getCityById(cityId);
+
+  const data = await fetchFromOpenMeteo<OpenMeteoForecastResponse>(env.openMeteo.forecastUrl, {
+    latitude: city.latitude,
+    longitude: city.longitude,
+    timezone: "auto",
+    forecast_days: days,
+    daily: FORECAST_DAILY_VARIABLES,
+  });
+
+  return formatForecast(city, "days", data);
+}
+
+// dates doit être triée par ordre croissant (garanti par parseForecastDates)
+export async function getForecastByDates(cityId: number, dates: string[]) {
+  const city = await getCityById(cityId);
+
+  const data = await fetchFromOpenMeteo<OpenMeteoForecastResponse>(env.openMeteo.forecastUrl, {
+    latitude: city.latitude,
+    longitude: city.longitude,
+    timezone: "auto",
+    start_date: dates[0],
+    end_date: dates[dates.length - 1],
+    daily: FORECAST_DAILY_VARIABLES,
+  });
+
+  return formatForecast(city, "dates", data, dates);
 }
