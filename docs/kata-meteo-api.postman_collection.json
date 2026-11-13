@@ -1,0 +1,1193 @@
+{
+  "info": {
+    "name": "KATA Météo - API locale",
+    "description": "Tests de l'API KATA Météo. Démarrer le backend (npm run dev dans backend) puis lancer la collection avec le Collection Runner : tous les tests doivent passer. Les dates sont calculées automatiquement par rapport à aujourd'hui.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "tunisId",
+      "value": "1"
+    },
+    {
+      "key": "cairoId",
+      "value": "95"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Dates relatives à aujourd'hui (UTC, comme le serveur), pour des tests qui ne vieillissent pas",
+          "const day = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);",
+          "pm.collectionVariables.set('today', day(0));",
+          "pm.collectionVariables.set('minus1', day(-1));",
+          "pm.collectionVariables.set('plus1', day(1));",
+          "pm.collectionVariables.set('plus2', day(2));",
+          "pm.collectionVariables.set('plus3', day(3));",
+          "pm.collectionVariables.set('plus4', day(4));",
+          "pm.collectionVariables.set('plus7', day(7));",
+          "pm.collectionVariables.set('plus12', day(12));",
+          "pm.collectionVariables.set('plus14', day(14));",
+          "pm.collectionVariables.set('plus15', day(15));",
+          "pm.collectionVariables.set('plus30', day(30));"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "1 - Santé",
+      "item": [
+        {
+          "name": "Santé",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"status ok\", () => pm.expect(body.status === \"ok\").to.be.true);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 - Pays et villes",
+      "item": [
+        {
+          "name": "Liste des pays",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/countries"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"20 pays\", () => pm.expect(body).to.have.lengthOf(20));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Villes de la Tunisie",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/countries/1/cities"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"4 villes\", () => pm.expect(body).to.have.lengthOf(4));",
+                  "pm.test(\"latitude numérique\", () => pm.expect(typeof body[0].latitude === \"number\").to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Villes de l'Égypte",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/countries/25/cities"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"4 villes\", () => pm.expect(body).to.have.lengthOf(4));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pays introuvable",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/countries/9999/cities"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"message pays introuvable\", () => pm.expect(body.error === \"Pays introuvable.\").to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pays : identifiant invalide (abc)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/countries/abc/cities"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pays : identifiant négatif",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/countries/-1/cities"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Détail d'une ville (Tunis)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cities/1"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Tunis, Tunisie\", () => pm.expect(body.name === \"Tunis\" && body.country.code === \"TN\").to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ville introuvable",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cities/999999"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"message ville introuvable\", () => pm.expect(body.error === \"Ville introuvable.\").to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ville : identifiant invalide (abc)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cities/abc"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ville : identifiant trop grand",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cities/99999999999"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 - Météo actuelle",
+      "item": [
+        {
+          "name": "Actuelle - Tunis",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/current?cityId={{tunisId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"température présente\", () => pm.expect(body.current.temperature !== undefined).to.be.true);",
+                  "pm.test(\"lever au format HH:mm\", () => pm.expect(/^\\d{2}:\\d{2}$/.test(body.current.sunrise)).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actuelle - Le Caire",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/current?cityId={{cairoId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"ville Le Caire\", () => pm.expect(body.city.name === \"Le Caire\").to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actuelle - sans cityId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/current"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"message cityId obligatoire\", () => pm.expect(body.error === \"Le paramètre cityId est obligatoire.\").to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actuelle - cityId invalide",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/current?cityId=abc"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actuelle - ville inconnue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/current?cityId=999999"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4 - Météo historique",
+      "item": [
+        {
+          "name": "Historique - 2025-10-28",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/historical?cityId={{tunisId}}&date=2025-10-28"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"données disponibles\", () => pm.expect(body.available === true).to.be.true);",
+                  "pm.test(\"température max renseignée\", () => pm.expect(body.daily.temperatureMax !== null).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Historique - limite basse 2000-01-01",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/historical?cityId={{tunisId}}&date=2000-01-01"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Historique - 29 février bissextile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/historical?cityId={{tunisId}}&date=2024-02-29"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Historique - aujourd'hui",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/historical?cityId={{tunisId}}&date={{today}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Historique - 1999-12-31 (trop ancienne)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/historical?cityId={{tunisId}}&date=1999-12-31"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"message date minimale\", () => pm.expect(body.error.includes(\"2000-01-01\")).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Historique - date future",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/historical?cityId={{tunisId}}&date={{plus30}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"message date future\", () => pm.expect(body.error.includes(\"futur\")).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Historique - 29 février non bissextile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/historical?cityId={{tunisId}}&date=2023-02-29"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Historique - mauvais format",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/historical?cityId={{tunisId}}&date=15-06-2024"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Historique - sans date",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/historical?cityId={{tunisId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"message date obligatoire\", () => pm.expect(body.error === \"Le paramètre date est obligatoire.\").to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Historique - ville inconnue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/historical?cityId=999999&date=2025-10-28"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5 - Prévisions",
+      "item": [
+        {
+          "name": "Prévisions - 7 jours",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId={{tunisId}}&days=7"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"7 jours\", () => pm.expect(body.days).to.have.lengthOf(7));",
+                  "pm.test(\"mode days\", () => pm.expect(body.mode === \"days\").to.be.true);",
+                  "pm.test(\"le premier jour est aujourd'hui\", () => pm.expect(body.days[0].date === pm.collectionVariables.get('today')).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prévisions - 1 jour",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId={{tunisId}}&days=1"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"1 jour\", () => pm.expect(body.days).to.have.lengthOf(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prévisions - 15 jours (maximum)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId={{tunisId}}&days=15"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"15 jours\", () => pm.expect(body.days).to.have.lengthOf(15));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prévisions - 0 jour",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId={{tunisId}}&days=0"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prévisions - 16 jours (refusé par le projet)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId={{tunisId}}&days=16"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prévisions - days invalide",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId={{tunisId}}&days=abc"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prévisions - days et dates ensemble",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId={{tunisId}}&days=7&dates={{plus2}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prévisions - ni days ni dates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId={{tunisId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prévisions - 1 date",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId={{tunisId}}&dates={{plus2}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"1 jour\", () => pm.expect(body.days).to.have.lengthOf(1));",
+                  "pm.test(\"mode dates\", () => pm.expect(body.mode === \"dates\").to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prévisions - 3 dates non consécutives",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId={{tunisId}}&dates={{plus1}},{{plus7}},{{plus12}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"exactement 3 jours\", () => pm.expect(body.days).to.have.lengthOf(3));",
+                  "pm.test(\"la date du milieu est bien celle demandée\", () => pm.expect(body.days[1].date === pm.collectionVariables.get('plus7')).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prévisions - dernier jour autorisé",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId={{tunisId}}&dates={{plus14}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prévisions - date hors fenêtre (+15 jours)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId={{tunisId}}&dates={{plus15}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prévisions - date passée (hier)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId={{tunisId}}&dates={{minus1}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prévisions - 4 dates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId={{tunisId}}&dates={{plus1}},{{plus2}},{{plus3}},{{plus4}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prévisions - dates en double",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId={{tunisId}}&dates={{plus2}},{{plus2}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prévisions - jour inexistant",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId={{tunisId}}&dates=2026-02-30"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prévisions - ville inconnue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId=999999&days=7"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6 - Filtres fields et exclude",
+      "item": [
+        {
+          "name": "Actuelle - fields=sunrise",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/current?cityId={{tunisId}}&fields=sunrise"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"lever et heure présents\", () => pm.expect(body.current.sunrise !== undefined && body.current.time !== undefined).to.be.true);",
+                  "pm.test(\"température absente\", () => pm.expect(body.current.temperature === undefined).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actuelle - fields=temperature,wind",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/current?cityId={{tunisId}}&fields=temperature,wind"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"température et vent présents\", () => pm.expect(body.current.temperature !== undefined && body.current.windSpeed !== undefined).to.be.true);",
+                  "pm.test(\"nuages absents\", () => pm.expect(body.current.cloudCover === undefined).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actuelle - exclude=clouds",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/current?cityId={{tunisId}}&exclude=clouds"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"nuages et unité retirés\", () => pm.expect(body.current.cloudCover === undefined && body.units.cloudCover === undefined).to.be.true);",
+                  "pm.test(\"température présente\", () => pm.expect(body.current.temperature !== undefined).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtres - fields et exclude ensemble",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/current?cityId={{tunisId}}&fields=sunrise&exclude=clouds"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtres - catégorie inconnue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/current?cityId={{tunisId}}&fields=foo"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"message catégorie inconnue\", () => pm.expect(body.error.includes(\"Catégorie inconnue\")).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtres - fields vide",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/current?cityId={{tunisId}}&fields="
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtres - majuscule refusée",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/current?cityId={{tunisId}}&fields=Sunrise"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtres - exclusion de toutes les catégories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/current?cityId={{tunisId}}&exclude=temperature,condition,rain,clouds,wind,sunrise,sunset"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prévisions - fields=rain",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId={{tunisId}}&days=3&fields=rain"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"3 jours\", () => pm.expect(body.days).to.have.lengthOf(3));",
+                  "pm.test(\"pluie et probabilité présentes\", () => pm.expect(body.days[0].precipitation !== undefined && body.days[0].precipitationProbability !== undefined).to.be.true);",
+                  "pm.test(\"vent absent\", () => pm.expect(body.days[0].windSpeed === undefined).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Historique - fields=sunrise,sunset",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/historical?cityId={{tunisId}}&date=2025-10-28&fields=sunrise,sunset"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"seulement lever et coucher\", () => pm.expect(body.daily.sunrise !== undefined && body.daily.temperatureMax === undefined).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prévisions 2 dates - exclude=wind,clouds",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/forecast?cityId={{tunisId}}&dates={{plus1}},{{plus2}}&exclude=wind,clouds"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"2 jours\", () => pm.expect(body.days).to.have.lengthOf(2));",
+                  "pm.test(\"vent et nuages retirés\", () => pm.expect(body.days[0].windSpeed === undefined && body.days[0].cloudCover === undefined).to.be.true);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7 - Erreurs générales",
+      "item": [
+        {
+          "name": "Route inconnue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/inconnu"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"message route introuvable\", () => pm.expect(body.error === \"Route introuvable.\").to.be.true);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
