@@ -1,3 +1,4 @@
+import { NotFoundError } from "../errors/AppError";
 import { findCountryById } from "../repositories/countryRepository";
 import {
   City,
@@ -6,14 +7,14 @@ import {
   findCityById,
 } from "../repositories/cityRepository";
 
-// Renvoie null si le pays n'existe pas
-export async function getCitiesByCountry(countryId: number): Promise<City[] | null> {
+export async function getCitiesByCountry(countryId: number): Promise<City[]> {
   const country = await findCountryById(countryId);
-  if (!country) return null;
+  if (!country) throw new NotFoundError("Pays introuvable.");
   return findCitiesByCountryId(countryId);
 }
 
-// Renvoie null si la ville n'existe pas
-export async function getCityById(id: number): Promise<CityDetails | null> {
-  return findCityById(id);
+export async function getCityById(id: number): Promise<CityDetails> {
+  const city = await findCityById(id);
+  if (!city) throw new NotFoundError("Ville introuvable.");
+  return city;
 }
