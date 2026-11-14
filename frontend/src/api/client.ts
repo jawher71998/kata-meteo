@@ -1,4 +1,14 @@
-import type { City, Country } from "./types";
+import type {
+  City,
+  Country,
+  CurrentWeatherResponse,
+  ForecastWeatherResponse,
+  HistoricalWeatherResponse,
+} from "./types";
+import { toApiPath } from "../lib/weatherQuery";
+import type { WeatherQuery } from "../lib/weatherQuery";
+import { mapCurrent, mapForecast, mapHistorical } from "../lib/weatherResult";
+import type { WeatherResult } from "../lib/weatherResult";
 
 export class ApiError extends Error {
   readonly status: number | null;
@@ -50,4 +60,17 @@ export function getCountries(): Promise<Country[]> {
 
 export function getCitiesByCountry(countryId: number): Promise<City[]> {
   return apiGet<City[]>(`/api/countries/${countryId}/cities`);
+}
+
+export async function getWeather(query: WeatherQuery): Promise<WeatherResult> {
+  const path = toApiPath(query);
+
+  switch (query.mode) {
+    case "current":
+      return mapCurrent(await apiGet<CurrentWeatherResponse>(path));
+    case "historical":
+      return mapHistorical(await apiGet<HistoricalWeatherResponse>(path));
+    case "forecast":
+      return mapForecast(await apiGet<ForecastWeatherResponse>(path));
+  }
 }
