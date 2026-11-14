@@ -1,11 +1,19 @@
 import type { WeatherState } from "../hooks/useWeather";
+import type { CategoryId } from "../lib/categories";
+import CategoryFilter from "./CategoryFilter";
 import WeatherCard from "./WeatherCard";
 
 interface WeatherResultsProps {
   state: WeatherState;
+  categories: CategoryId[];
+  onCategoriesChange: (categories: CategoryId[]) => void;
 }
 
-export default function WeatherResults({ state }: WeatherResultsProps) {
+export default function WeatherResults({
+  state,
+  categories,
+  onCategoriesChange,
+}: WeatherResultsProps) {
   switch (state.status) {
     case "idle":
       return null;
@@ -19,11 +27,21 @@ export default function WeatherResults({ state }: WeatherResultsProps) {
           <h2>
             {state.data.cityName} ({state.data.countryName})
           </h2>
-          <div className="weather-grid">
-            {state.data.items.map((item) => (
-              <WeatherCard key={item.id} item={item} units={state.data.units} />
-            ))}
-          </div>
+          <CategoryFilter selected={categories} onChange={onCategoriesChange} />
+          {categories.length === 0 ? (
+            <p role="alert">Sélectionnez au moins une donnée à afficher.</p>
+          ) : (
+            <div className="weather-grid">
+              {state.data.items.map((item) => (
+                <WeatherCard
+                  key={item.id}
+                  item={item}
+                  units={state.data.units}
+                  categories={categories}
+                />
+              ))}
+            </div>
+          )}
         </section>
       );
   }

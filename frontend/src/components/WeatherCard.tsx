@@ -1,9 +1,17 @@
+import type { CategoryId } from "../lib/categories";
 import { weatherIcon } from "../lib/weatherIcons";
 import type { DisplayUnits, WeatherItem } from "../lib/weatherResult";
 
 interface WeatherCardProps {
   item: WeatherItem;
   units: DisplayUnits;
+  categories: CategoryId[];
+}
+
+interface Row {
+  category: CategoryId;
+  label: string;
+  value: string;
 }
 
 // Une donnée absente s'affiche "Non disponible", jamais 0
@@ -12,7 +20,7 @@ function show(value: number | string | null | undefined, unit = ""): string {
   return unit ? `${value} ${unit}` : String(value);
 }
 
-export default function WeatherCard({ item, units }: WeatherCardProps) {
+export default function WeatherCard({ item, units, categories }: WeatherCardProps) {
   if (!item.available) {
     return (
       <article className="weather-card">
@@ -23,28 +31,47 @@ export default function WeatherCard({ item, units }: WeatherCardProps) {
   }
 
   const condition = item.condition ?? "Condition inconnue";
-  const rows: { label: string; value: string }[] = [];
+  const rows: Row[] = [];
 
   if (item.temperature !== undefined) {
-    rows.push({ label: "Température", value: show(item.temperature, units.temperature) });
+    rows.push({
+      category: "temperature",
+      label: "Température",
+      value: show(item.temperature, units.temperature),
+    });
   }
   if (item.temperatureMax !== undefined) {
-    rows.push({ label: "Température max", value: show(item.temperatureMax, units.temperature) });
+    rows.push({
+      category: "temperature",
+      label: "Température max",
+      value: show(item.temperatureMax, units.temperature),
+    });
   }
   if (item.temperatureMin !== undefined) {
-    rows.push({ label: "Température min", value: show(item.temperatureMin, units.temperature) });
+    rows.push({
+      category: "temperature",
+      label: "Température min",
+      value: show(item.temperatureMin, units.temperature),
+    });
   }
-  rows.push({ label: "Pluie", value: show(item.precipitation, units.precipitation) });
+  rows.push({
+    category: "rain",
+    label: "Pluie",
+    value: show(item.precipitation, units.precipitation),
+  });
   if (item.precipitationProbability !== undefined) {
     rows.push({
+      category: "rain",
       label: "Probabilité de pluie",
       value: show(item.precipitationProbability, units.precipitationProbability),
     });
   }
-  rows.push({ label: "Nuages", value: show(item.cloudCover, units.cloudCover) });
-  rows.push({ label: "Vent", value: show(item.windSpeed, units.windSpeed) });
-  rows.push({ label: "Lever du soleil", value: show(item.sunrise) });
-  rows.push({ label: "Coucher du soleil", value: show(item.sunset) });
+  rows.push({ category: "clouds", label: "Nuages", value: show(item.cloudCover, units.cloudCover) });
+  rows.push({ category: "wind", label: "Vent", value: show(item.windSpeed, units.windSpeed) });
+  rows.push({ category: "sunrise", label: "Lever du soleil", value: show(item.sunrise) });
+  rows.push({ category: "sunset", label: "Coucher du soleil", value: show(item.sunset) });
+
+  const visibleRows = rows.filter((row) => categories.includes(row.category));
 
   return (
     <article className="weather-card">
@@ -56,7 +83,7 @@ export default function WeatherCard({ item, units }: WeatherCardProps) {
         {condition}
       </p>
       <dl>
-        {rows.map((row) => (
+        {visibleRows.map((row) => (
           <div key={row.label} className="weather-row">
             <dt>{row.label}</dt>
             <dd>{row.value}</dd>
