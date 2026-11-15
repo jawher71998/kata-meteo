@@ -40,12 +40,23 @@ npm run dev
 
 L'API répond sur `http://localhost:3000` (test : `/api/health`).
 
+5. Dans un second terminal, lancer le frontend :
+
+```
+cd frontend
+npm install
+npm run dev
+```
+
+L'application est disponible sur `http://localhost:5173`.
+
 ## Documentation
 
 - `docs/API.md` : référence de l'API (routes, paramètres, erreurs)
 - `docs/database.md` : base de données
 - `docs/open-meteo-findings.md` : résultats de l'exploration d'Open-Meteo
 - `docs/kata-meteo-api.postman_collection.json` : requêtes de test Postman
+- `frontend/README.md` : frontend (structure, choix de conception)
 
 ## Avancement
 
@@ -53,7 +64,7 @@ L'API répond sur `http://localhost:3000` (test : `/api/health`).
 - [x] Phase 1 : découverte de l'API Open-Meteo
 - [x] Phase 2 : base de données
 - [x] Phase 3 : backend REST
-- [ ] Phase 4 : frontend
+- [x] Phase 4 : frontend
 - [ ] Phase 5 : tests et qualité
 - [ ] Phase 6 : livraison
 
