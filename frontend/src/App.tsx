@@ -20,15 +20,28 @@ export default function App() {
   }
 
   return (
-    <main>
-      <h1>KATA Météo</h1>
-      <LocationPicker onCityChange={handleCityChange} />
-      <WeatherForm city={city} onSubmit={setQuery} />
-      <WeatherResults
-        state={weather}
-        categories={categories}
-        onCategoriesChange={setCategories}
-      />
-    </main>
+    <>
+      <main>
+        <header>
+          <h1>KATA Météo</h1>
+          <p className="subtitle">
+            Consultez la météo actuelle, passée ou prévue de la ville de votre choix.
+          </p>
+        </header>
+        <LocationPicker onCityChange={handleCityChange} />
+        <WeatherForm city={city} onSubmit={setQuery} />
+        <WeatherResults
+          state={weather}
+          categories={categories}
+          onCategoriesChange={setCategories}
+        />
+      </main>
+      <footer className="site-footer">
+        Données météo :{" "}
+        <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">
+          Open-Meteo.com
+        </a>
+      </footer>
+    </>
   );
 }
